@@ -1,5 +1,9 @@
 #!/bin/sh
 
+if [ "$1" = "-a" ]; then
+   use_system_addr=1
+fi
+
 journal_path=$(cygpath -u "$USERPROFILE\Saved Games\Frontier Developments\Elite Dangerous")
 pushd "$journal_path" > /dev/null
 latest_journal=$(ls -t Journal*|head -n 1)
@@ -17,7 +21,11 @@ echo Highest bodyID: $largest_body
 # miss interesting bodies such as comets if there is a gap in the BodyIDs.
 
 for body_id in $(seq $[ $largest_body + 1] 100); do
-   cmdline="./edgalmap.py $system_name -b $body_id"
+   if [ "$use_system_addr" = 1 ]; then
+      cmdline="./edgalmap.py $system_addr -b $body_id"
+   else
+      cmdline="./edgalmap.py $system_name -b $body_id"
+   fi
    echo
    echo "$cmdline"
    $cmdline

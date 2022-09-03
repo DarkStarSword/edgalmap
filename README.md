@@ -39,3 +39,15 @@ Iterate over possibly hidden bodies in the current system (FSS scan everything f
     Copied to clipboard: "Col 69 Sector WL-Q b20-163840"
     
     Press enter to continue to next body, Ctrl+C to abort...
+
+Same as above, but use the system address instead of system name (required for named systems):
+
+    ./find_bodies.sh -a
+    Current system: Col 69 Sector WL-Q b20-0
+    System Address: 677127660481
+    Highest bodyID: 8
+    
+    ./edgalmap.py 677127660481 -b 9
+    Copied to clipboard: "Oochorrs QD-P b52-147456"
+    
+    Press enter to continue to next body, Ctrl+C to abort...
