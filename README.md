@@ -22,3 +22,20 @@ Looking up address of the HyperbolicOrbiter at predicted waypoint 12:
 
     ./edgalmap.py Col 69 Sector LM-U c3-1 -b 28
     Copied to clipboard: "Col 69 Sector LM-U c3-3670017"
+
+Iterate over possibly hidden bodies in the current system (FSS scan everything first, note that this won't search through any gaps in the BodyIDs):
+
+    ./find_bodies.sh
+    Current system: Col 69 Sector WL-Q b20-0
+    System Address: 677127660481
+    Highest bodyID: 8
+    
+    ./edgalmap.py Col 69 Sector WL-Q b20-0 -b 9
+    Copied to clipboard: "Col 69 Sector WL-Q b20-147456"
+    
+    Press enter to continue to next body, Ctrl+C to abort...
+    
+    ./edgalmap.py Col 69 Sector WL-Q b20-0 -b 10
+    Copied to clipboard: "Col 69 Sector WL-Q b20-163840"
+    
+    Press enter to continue to next body, Ctrl+C to abort...
