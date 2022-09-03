@@ -101,7 +101,7 @@ def s(system_address, body_id=0):
             to_letter(cube_layer).lower())
     if (boxel_remainder):
         system_name += '%d-' % boxel_remainder
-    system_name += '%s' % b(cube_layer, body_id)
+    system_name += '%s' % (system_id + b(cube_layer, body_id))
     winclipboard.copy_text_simple(system_name.encode('ascii'))
     print('Copied to clipboard: "%s"' % system_name)
 
