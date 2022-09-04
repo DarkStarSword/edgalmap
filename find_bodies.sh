@@ -7,7 +7,8 @@ fi
 journal_path=$(cygpath -u "$USERPROFILE\Saved Games\Frontier Developments\Elite Dangerous")
 pushd "$journal_path" > /dev/null
 latest_journal=$(ls -t Journal*|head -n 1)
-system_name="$(grep SystemName $latest_journal|tail -n 1|sed -E 's/^.*"SystemName":"([^"]*)".*$/\1/')"
+#system_name="$(grep SystemName $latest_journal|tail -n 1|sed -E 's/^.*"SystemName":"([^"]*)".*$/\1/')"
+system_name="$(grep -E '"FSDJump|Location"' $latest_journal|tail -n 1|sed -E 's/^.*"StarSystem":"([^"]*)".*$/\1/')"
 system_addr=$(grep '"StarSystem":"'"$system_name"'"' $latest_journal|grep SystemAddress|head -n 1|sed -E 's/^.*"SystemAddress":([^,]+).*$/\1/' | sort -nr | head -n 1)
 largest_body=$(grep '"StarSystem":"'"$system_name"'"' $latest_journal|grep BodyID|sed -E 's/^.*"BodyID":([^,]+).*$/\1/' | sort -nr | head -n 1)
 popd > /dev/null
