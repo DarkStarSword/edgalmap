@@ -61,21 +61,28 @@ def s(system_address, body_id=0):
     def get_bits(n):
         return system_address >> n, system_address & 2**n-1
     system_address, cube_layer = get_bits(3)
-    #boxel_bits = 4
     boxel_bits = 7 - cube_layer
+    #print('layer', cube_layer)
+    #print('boxel_bits', boxel_bits)
     system_address, boxel_z    = get_bits(boxel_bits)
     system_address, sector_z   = get_bits(7)
     system_address, boxel_y    = get_bits(boxel_bits)
     system_address, sector_y   = get_bits(6)
     system_address, boxel_x    = get_bits(boxel_bits)
     system_address, sector_x   = get_bits(7)
-    system_address, system_id  = get_bits(21)
-    system_address, zero       = get_bits(9)
-    #print('layer', cube_layer)
+    system_id_bits = 11 + cube_layer*3
+    #print('system_id_bits', system_id_bits)
+    system_address, system_id  = get_bits(system_id_bits)
+    system_address, body_id_a  = get_bits(9)
     #print('sector', sector_x, sector_y, sector_z)
     #print('boxel', boxel_x, boxel_y, boxel_z)
     #print('system_id', system_id)
-    #print('zero', zero)
+    #print('body_id', body_id_a)
+    if body_id and body_id_a:
+        print("Address already included BodyID %i, don't use -b %i" % (body_id_a, body_id))
+        return 1
+    elif body_id_a:
+        body_id = body_id_a
     try:
         sector_key = system_lookup_key(sector_x, sector_y, sector_z)
         sector_name = lookup_sector_name(sector_key).strip('\t')
@@ -101,6 +108,10 @@ def s(system_address, body_id=0):
             to_letter(cube_layer).lower())
     if (boxel_remainder):
         system_name += '%d-' % boxel_remainder
+    if body_id_a:
+        # Body ID was included in the address cryptically, and we are about to
+        # send it to the clipboard cryptically... show the readable ID as well
+        print("%s%s, Body %i" % (system_name, system_id, body_id))
     system_name += '%s' % (system_id + b(cube_layer, body_id))
     winclipboard.copy_text_simple(system_name.encode('ascii'))
     print('Copied to clipboard: "%s"' % system_name)
