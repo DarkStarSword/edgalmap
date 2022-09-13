@@ -431,4 +431,4 @@ def sendViaClipboard(blobs, record = None, ui=ui_null()):
 if __name__ == '__main__':
   args = sys.argv[1:] if sys.argv[1:] else ['usage: ' , sys.argv[0], ' { strings }']
   blobs = zip([ "Item %i"%x for x in range(len(args)) ], args)
-  sendViaClipboard(blobs, ui=ui_tty())
+  sendViaClipboard(blobs) #, ui=ui_tty())
