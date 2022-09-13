@@ -157,6 +157,24 @@ try:
   user32 = ctypes.windll.user32
   kernel32 = ctypes.windll.kernel32
   #gdi32 = ctypes.windll.gdi32
+  if sys.maxsize > 2**32:
+    # 64bit native ctypes has broken bindings
+    # https://forums.autodesk.com/t5/maya-programming/ctypes-bug-cannot-copy-data-to-clipboard-via-python/td-p/9195866
+    kernel32.GlobalAlloc.argtypes = (wintypes.UINT, ctypes.c_size_t)
+    kernel32.GlobalAlloc.restype = wintypes.HGLOBAL
+    kernel32.GlobalLock.argtypes = wintypes.HGLOBAL,
+    kernel32.GlobalLock.restype = wintypes.LPVOID
+    kernel32.GlobalUnlock.argtypes = wintypes.HGLOBAL,
+    kernel32.GlobalUnlock.restype = wintypes.BOOL
+    user32.SetClipboardData.argtypes = (wintypes.UINT, wintypes.HANDLE)
+    user32.SetClipboardData.restype = wintypes.HANDLE
+    user32.GetClipboardData.argtypes = wintypes.UINT,
+    user32.GetClipboardData.restype = wintypes.HANDLE
+    user32.OpenClipboard.argtypes = wintypes.HWND,
+    user32.OpenClipboard.restype = wintypes.BOOL
+    user32.CloseClipboard.restype = wintypes.BOOL
+    user32.EmptyClipboard.restype = wintypes.BOOL
+
 except AttributeError:
   # Cygwin lacks the above, but seems happy with this:
   user32 = ctypes.CDLL("user32.dll")
