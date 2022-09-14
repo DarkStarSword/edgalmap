@@ -2,9 +2,8 @@
 
 import json
 import winclipboard
-import importlib
 import argparse
-importlib.reload(winclipboard)
+import sys, os
 
 # https://forums.frontier.co.uk/threads/warning-galaxy-map-operating-beyond-safety-limits.598751/
 layers_map = {
@@ -28,7 +27,8 @@ layers_map = {
 def b(cube_layer, body_id):
     return body_id << layers_map[cube_layer]
 
-system_lookup_json = json.load(open('PGSectorNames.json', 'r'), strict=False)
+sector_lookup_file = os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), 'PGSectorNames.json')
+system_lookup_json = json.load(open(sector_lookup_file, 'r'), strict=False)
 system_loopup_map = { x['Key']: x['PGN'] for x in system_lookup_json['ProceduralGeneratedSectorNames'] }
 def system_lookup_key(sector_x, sector_y, sector_z):
     # "Key" seems rather unnecessary - could just take SectorX/Y/Z as a tuple and use that as the key...
