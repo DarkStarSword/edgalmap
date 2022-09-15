@@ -54,10 +54,7 @@ def s_by_name(system_name, body_id):
     winclipboard.copy_text_simple(system_name.encode('ascii'))
     print('Copied to clipboard: "%s"' % system_name)
 
-def s(system_address, body_id=0):
-    if isinstance(system_address, str):
-        return s_by_name(system_address, body_id)
-
+def resolve_system_address(system_address, body_id=0):
     def get_bits(n):
         return system_address >> n, system_address & 2**n-1
     system_address, cube_layer = get_bits(3)
@@ -80,7 +77,7 @@ def s(system_address, body_id=0):
     #print('body_id', body_id_a)
     if body_id and body_id_a:
         print("Address already included BodyID %i, don't use -b %i" % (body_id_a, body_id))
-        return 1
+        return
     elif body_id_a:
         body_id = body_id_a
     try:
@@ -108,13 +105,22 @@ def s(system_address, body_id=0):
             to_letter(cube_layer).lower())
     if (boxel_remainder):
         system_name += '%d-' % boxel_remainder
+    body_search_string = '%s%s' % (system_name, system_id + b(cube_layer, body_id))
+    system_name = '%s%s' % (system_name, system_id)
+    return (system_name, body_search_string, body_id_a)
+
+def s(system_address, body_id=0):
+    if isinstance(system_address, str):
+        return s_by_name(system_address, body_id)
+
+    (system_name, body_search_string, body_id_a) = resolve_system_address(system_address, body_id)
+
     if body_id_a:
         # Body ID was included in the address cryptically, and we are about to
         # send it to the clipboard cryptically... show the readable ID as well
-        print("%s%s, Body %i" % (system_name, system_id, body_id))
-    system_name += '%s' % (system_id + b(cube_layer, body_id))
-    winclipboard.copy_text_simple(system_name.encode('ascii'))
-    print('Copied to clipboard: "%s"' % system_name)
+        print("%s, Body %i" % (system_name, body_id))
+    winclipboard.copy_text_simple(body_search_string.encode('ascii'))
+    print('Copied to clipboard: "%s"' % body_search_string)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Warning: Galaxy Map Operating Beyond Safety Limits!")
