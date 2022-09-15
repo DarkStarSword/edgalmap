@@ -1,5 +1,7 @@
 Calculates Elite Dangerous galaxy map addresses that target a specific body within a system.
 
+** As of 3308-09-15 this is of limited usefulness as the galaxy map no longer accepts extended addresses **
+
 Based on the technique described by CMDR Pyroboros:
 https://forums.frontier.co.uk/threads/warning-galaxy-map-operating-beyond-safety-limits.598751/
 
