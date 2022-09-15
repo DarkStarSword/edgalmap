@@ -1,8 +1,22 @@
 #!/bin/sh
 
-if [ "$1" = "-a" ]; then
-   use_system_addr=1
-fi
+while test $# -gt 0; do
+	opt="$1"
+	shift
+	case "$opt" in
+	-a)
+      use_system_addr=1
+      ;;
+   -b)
+      starting_body=$1
+      shift
+      ;;
+   *)
+      echo "Unexpected option: $opt"
+      exit 1
+      ;;
+   esac
+done
 
 journal_path=$(cygpath -u "$USERPROFILE\Saved Games\Frontier Developments\Elite Dangerous")
 pushd "$journal_path" > /dev/null
@@ -21,7 +35,9 @@ echo Highest bodyID: $largest_body
 # the new HyperbolicOrbiter as that always seems to be the highest ID, but may
 # miss interesting bodies such as comets if there is a gap in the BodyIDs.
 
-for body_id in $(seq $[ $largest_body + 1] 100); do
+test -z "$starting_body" && starting_body=$[ $largest_body + 1 ]
+
+for body_id in $(seq $starting_body 100); do
    if [ "$use_system_addr" = 1 ]; then
       cmdline="./edgalmap.py $system_addr -b $body_id"
    else
