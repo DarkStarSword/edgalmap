@@ -109,17 +109,23 @@ def resolve_system_address(system_address, body_id=0):
     system_name = '%s%s' % (system_name, system_id)
     return (system_name, body_search_string, body_id_a)
 
+def calc_body_addr(system_addr, body_id):
+    return (body_id << (64-9)) | system_addr
+
 def s(system_address, body_id=0):
     if isinstance(system_address, str):
         return s_by_name(system_address, body_id)
 
     (system_name, body_search_string, body_id_a) = resolve_system_address(system_address, body_id)
+    body_addr = calc_body_addr(system_address, body_id)
 
     if body_id_a:
         # Body ID was included in the address cryptically, and we are about to
         # send it to the clipboard cryptically... show the readable ID as well
         print("%s, Body %i" % (system_name, body_id_a))
     winclipboard.copy_text_simple(body_search_string.encode('ascii'))
+    print('System Address: %i' % (body_addr & (2**(64-9)-1)))
+    print('Body Address: %i' % body_addr)
     print('Copied to clipboard: "%s"' % body_search_string)
 
 if __name__ == '__main__':
