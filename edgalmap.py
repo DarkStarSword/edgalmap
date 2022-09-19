@@ -54,7 +54,7 @@ def s_by_name(system_name, body_id):
     winclipboard.copy_text_simple(system_name.encode('ascii'))
     print('Copied to clipboard: "%s"' % system_name)
 
-def resolve_system_address(system_address, body_id=0):
+def resolve_system_address(system_address, body_id=None):
     def get_bits(n):
         return system_address >> n, system_address & 2**n-1
     system_address, cube_layer = get_bits(3)
@@ -75,11 +75,12 @@ def resolve_system_address(system_address, body_id=0):
     #print('boxel', boxel_x, boxel_y, boxel_z)
     #print('system_id', system_id)
     #print('body_id', body_id_a)
-    if body_id and body_id_a:
-        print("Address already included BodyID %i, don't use -b %i" % (body_id_a, body_id))
-        return
+    if body_id is not None and body_id_a:
+        print("WARNING: Address already included BodyID %i, replacing with -b %i" % (body_id_a, body_id))
     elif body_id_a:
         body_id = body_id_a
+    elif body_id is None:
+        body_id = 0
     try:
         sector_key = system_lookup_key(sector_x, sector_y, sector_z)
         sector_name = lookup_sector_name(sector_key).strip('\t')
@@ -107,30 +108,33 @@ def resolve_system_address(system_address, body_id=0):
         system_name += '%d-' % boxel_remainder
     body_search_string = '%s%s' % (system_name, system_id + b(cube_layer, body_id))
     system_name = '%s%s' % (system_name, system_id)
-    return (system_name, body_search_string, body_id_a)
+    return (system_name, body_search_string, body_id)
 
 def calc_body_addr(system_addr, body_id):
-    return (body_id << (64-9)) | system_addr
+    system_addr_masked = system_addr & (2**(64-9)-1)
+    body_addr = (body_id << (64-9)) | system_addr_masked
+    system_addr = system_addr & (2**(64-9)-1)
+    return (system_addr_masked, body_addr)
 
-def s(system_address, body_id=0):
+def s(system_address, body_id=None):
     if isinstance(system_address, str):
-        return s_by_name(system_address, body_id)
+        return s_by_name(system_address, 0 if body_id is None else body_id)
 
     (system_name, body_search_string, body_id_a) = resolve_system_address(system_address, body_id)
-    body_addr = calc_body_addr(system_address, body_id)
+    (system_address, body_addr) = calc_body_addr(system_address, body_id_a)
 
     if body_id_a:
         # Body ID was included in the address cryptically, and we are about to
         # send it to the clipboard cryptically... show the readable ID as well
         print("%s, Body %i" % (system_name, body_id_a))
     winclipboard.copy_text_simple(body_search_string.encode('ascii'))
-    print('System Address: %i' % (body_addr & (2**(64-9)-1)))
+    print('System Address: %i' % system_address)
     print('Body Address: %i' % body_addr)
     print('Copied to clipboard: "%s"' % body_search_string)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Warning: Galaxy Map Operating Beyond Safety Limits!")
-    parser.add_argument('-b', '--body-id', type=int, default=0, help='BodyID to target')
+    parser.add_argument('-b', '--body-id', type=int, default=None, help='BodyID to target')
     parser.add_argument('system', nargs='+', help='System name (generic names only) or numeric SystemAddress from journal (required for named systems)')
     args = parser.parse_args()
     system = ' '.join(args.system)
