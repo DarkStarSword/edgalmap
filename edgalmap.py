@@ -118,7 +118,7 @@ def s(system_address, body_id=0):
     if body_id_a:
         # Body ID was included in the address cryptically, and we are about to
         # send it to the clipboard cryptically... show the readable ID as well
-        print("%s, Body %i" % (system_name, body_id))
+        print("%s, Body %i" % (system_name, body_id_a))
     winclipboard.copy_text_simple(body_search_string.encode('ascii'))
     print('Copied to clipboard: "%s"' % body_search_string)
 
