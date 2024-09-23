@@ -52,6 +52,11 @@ def s_by_name(system_name, body_id):
         print('Malformed system name:', suffix)
         return
     cube_layer = ord(suffix[0].lower()) - ord('a')
+    if suffix.find('-') == -1:
+        suffix = '{}0-{}'.format(suffix[0], suffix[1:])
+        fixed_system_name = '{} {}'.format(system_name.rpartition(' ')[0], suffix)
+        print('NOTE: Added implicit boxel zero remainder to system name: {}'.format(fixed_system_name))
+        system_name = fixed_system_name
     system_id = suffix[1:].rpartition('-')[2]
     if not system_id.isnumeric():
         print('Malformed system ID:', suffix)
