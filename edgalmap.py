@@ -32,6 +32,8 @@ layers_map = {
 }
 def b(cube_layer, body_id):
     return body_id << layers_map[cube_layer]
+def b_inv(cube_layer, system_id):
+    return system_id & 2**(cube_layer+3)-1, system_id >> layers_map[cube_layer]
 
 sector_lookup_file = os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), 'PGSectorNames.json')
 system_lookup_json = json.load(open(sector_lookup_file, 'r'), strict=False)
@@ -54,9 +56,21 @@ def s_by_name(system_name, body_id):
     if not system_id.isnumeric():
         print('Malformed system ID:', suffix)
         return
-    #print(cube_layer, system_id)
+    system_id_masked, body_id_a = b_inv(cube_layer, int(system_id))
+    #print(cube_layer, system_id, system_id_masked, body_id_a)
 
-    system_name = system_name[:-len(system_id)] + str((int(system_id) + b(cube_layer, body_id)))
+    system_name = system_name[:-len(system_id)] + str((int(system_id) + b(cube_layer, body_id or 0)))
+
+    if body_id is not None and body_id_a:
+        print("WARNING: Address already included BodyID %i, replacing with -b %i" % (body_id_a, body_id))
+        system_name = '{}-{}'.format(system_name.rpartition('-')[0], system_id_masked + b(cube_layer, body_id))
+
+    if body_id_a:
+        # Body ID was included in the address cryptically, and we are about to
+        # send it to the clipboard cryptically... show the readable ID as well
+        system_name_a = '{}-{}'.format(system_name.rpartition('-')[0], system_id_masked)
+        print("%s, Body %i" % (system_name_a, body_id or body_id_a))
+
     winclipboard.copy_text_simple(system_name.encode('ascii'))
     print('Copied to clipboard: "%s"' % system_name)
 
@@ -124,7 +138,7 @@ def calc_body_addr(system_addr, body_id):
 
 def s(system_address, body_id=None):
     if isinstance(system_address, str):
-        return s_by_name(system_address, 0 if body_id is None else body_id)
+        return s_by_name(system_address, body_id)
 
     (system_name, body_search_string, body_id_a) = resolve_system_address(system_address, body_id)
     (system_address, body_addr) = calc_body_addr(system_address, body_id_a)
