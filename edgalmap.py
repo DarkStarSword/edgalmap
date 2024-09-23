@@ -1,9 +1,15 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import json
-import winclipboard
 import argparse
 import sys, os
+try:
+    import winclipboard
+except: # Occurs on WSL, fallback to calling clip.exe
+    class winclipboard(object):
+        def copy_text_simple(text):
+            import subprocess
+            subprocess.run("clip.exe", input=text)
 
 # https://forums.frontier.co.uk/threads/warning-galaxy-map-operating-beyond-safety-limits.598751/
 layers_map = {
