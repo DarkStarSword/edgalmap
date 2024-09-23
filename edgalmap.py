@@ -37,17 +37,20 @@ def b_inv(cube_layer, system_id):
 
 sector_lookup_file = os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), 'PGSectorNames.json')
 system_lookup_json = json.load(open(sector_lookup_file, 'r'), strict=False)
-system_loopup_map = { x['Key']: x['PGN'] for x in system_lookup_json['ProceduralGeneratedSectorNames'] }
+system_lookup_map = { x['Key']: x['PGN'] for x in system_lookup_json['ProceduralGeneratedSectorNames'] }
 def system_lookup_key(sector_x, sector_y, sector_z):
     # "Key" seems rather unnecessary - could just take SectorX/Y/Z as a tuple and use that as the key...
     # Or better yet, the file could have been formatted to use a json map >_<
     # But anyway...
     return sector_x | sector_y<<7 | sector_z<<14
 def lookup_sector_name(sector_key):
-    return system_loopup_map[sector_key]
+    return system_lookup_map[sector_key]
+def lookup_sector_pos(sector_name):
+    sector_lookup_map = { x['PGN'].strip('\t'): (x['Position']['SectorX'], x['Position']['SectorY'], x['Position']['SectorZ']) for x in system_lookup_json['ProceduralGeneratedSectorNames'] }
+    return sector_lookup_map[sector_name]
 
 def s_by_name(system_name, body_id):
-    suffix = system_name.rpartition(' ')[2]
+    prefix, _, suffix = system_name.rpartition(' ')
     if suffix == system_name or suffix[0].lower() not in 'abcdefgh':
         print('Malformed system name:', suffix)
         return
@@ -57,7 +60,7 @@ def s_by_name(system_name, body_id):
         fixed_system_name = '{} {}'.format(system_name.rpartition(' ')[0], suffix)
         print('NOTE: Added implicit boxel zero remainder to system name: {}'.format(fixed_system_name))
         system_name = fixed_system_name
-    system_id = suffix[1:].rpartition('-')[2]
+    boxel_remainder, _, system_id = suffix[1:].rpartition('-')
     if not system_id.isnumeric():
         print('Malformed system ID:', suffix)
         return
@@ -65,16 +68,23 @@ def s_by_name(system_name, body_id):
     #print(cube_layer, system_id, system_id_masked, body_id_a)
 
     system_name = system_name[:-len(system_id)] + str((int(system_id) + b(cube_layer, body_id or 0)))
+    system_name_a = '{}-{}'.format(system_name.rpartition('-')[0], system_id_masked)
 
     if body_id is not None and body_id_a:
         print("WARNING: Address already included BodyID %i, replacing with -b %i" % (body_id_a, body_id))
         system_name = '{}-{}'.format(system_name.rpartition('-')[0], system_id_masked + b(cube_layer, body_id))
+    elif body_id is None:
+        body_id = body_id_a
 
     if body_id_a:
         # Body ID was included in the address cryptically, and we are about to
         # send it to the clipboard cryptically... show the readable ID as well
-        system_name_a = '{}-{}'.format(system_name.rpartition('-')[0], system_id_masked)
-        print("%s, Body %i" % (system_name_a, body_id or body_id_a))
+        print("%s, Body %i" % (system_name_a, body_id))
+
+    system_address = encode_system_address(prefix, cube_layer, int(boxel_remainder), system_id_masked)
+    (system_address, body_addr) = calc_body_addr(system_address, body_id)
+    print('System Address: %i' % system_address)
+    print('Body Address: %i' % body_addr)
 
     winclipboard.copy_text_simple(system_name.encode('ascii'))
     print('Copied to clipboard: "%s"' % system_name)
@@ -134,6 +144,43 @@ def resolve_system_address(system_address, body_id=None):
     body_search_string = '%s%s' % (system_name, system_id + b(cube_layer, body_id))
     system_name = '%s%s' % (system_name, system_id)
     return (system_name, body_search_string, body_id)
+
+# NOTE: This function expects the final suffix to have already been decoded by
+# the caller to reduce redundant code
+def encode_system_address(prefix, cube_layer, boxel_remainder, system_id, body_id=0):
+    sector_name, _, boxel_string = prefix.rpartition(' ')
+    sector_x, sector_y, sector_z = lookup_sector_pos(sector_name)
+
+    def from_letter(n):
+        return ord(n) - ord('A')
+    assert(len(boxel_string) == 4)
+    boxel_key  = from_letter(boxel_string[0])
+    boxel_key += from_letter(boxel_string[1]) * 26
+    assert(boxel_string[2] == '-')
+    boxel_key += from_letter(boxel_string[3]) * 26 * 26
+    boxel_key += boxel_remainder * 26 * 26 * 26
+    boxel_x = (boxel_key      ) & 0x7f
+    boxel_y = (boxel_key >>  7) & 0x7f
+    boxel_z = (boxel_key >> 14) & 0x7f
+    assert(boxel_key == boxel_x | boxel_y<<7 | boxel_z<<14)
+    #print('boxel', boxel_key, boxel_x, boxel_y, boxel_z)
+
+    boxel_bits = 7 - cube_layer
+    system_id_bits = 11 + cube_layer*3
+    system_address = 0
+    def put_bits(n, val):
+        assert(val & ~(2**n-1) == 0)
+        return system_address << n | val
+    system_address = put_bits(9, body_id)
+    system_address = put_bits(system_id_bits, system_id)
+    system_address = put_bits(7, sector_x)
+    system_address = put_bits(boxel_bits, boxel_x)
+    system_address = put_bits(6, sector_y)
+    system_address = put_bits(boxel_bits, boxel_y)
+    system_address = put_bits(7, sector_z)
+    system_address = put_bits(boxel_bits, boxel_z)
+    system_address = put_bits(3, cube_layer)
+    return system_address
 
 def calc_body_addr(system_addr, body_id):
     system_addr_masked = system_addr & (2**(64-9)-1)
