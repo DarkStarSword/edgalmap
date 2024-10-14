@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
 import json
+import gzip
 import argparse
+import collections
 import sys, os
 try:
     import winclipboard
@@ -49,7 +51,27 @@ def lookup_sector_pos(sector_name):
     sector_lookup_map = { x['PGN'].strip('\t'): (x['Position']['SectorX'], x['Position']['SectorY'], x['Position']['SectorZ']) for x in system_lookup_json['ProceduralGeneratedSectorNames'] }
     return sector_lookup_map[sector_name]
 
+named_systems = json.load(gzip.open('NamedSystems.json.gz'))
+named_systems_dupe_counts = collections.Counter([k.lower() for k in named_systems.keys()])
+named_systems_dupe_counts += collections.Counter({k.lower(): len(v) for k,v in named_systems.items() if isinstance(v, list)})
+#print(named_systems_dupe_counts.most_common(500))
+
 def s_by_name(system_name, body_id):
+    named_system_count = named_systems_dupe_counts[system_name.lower()]
+    if named_system_count > 1:
+        print('NOTICE: There are multiple systems with this name, try looking up by SystemID instead:')
+        for named_system_name, named_system_id in named_systems.items():
+            if named_system_name.lower() == system_name.lower():
+                if isinstance(named_system_id, list):
+                    for named_system_id_ in named_system_id:
+                        print('"%s": %i' % (named_system_name, named_system_id_))
+                else:
+                    print('"%s": %i' % (named_system_name, named_system_id))
+        return
+    elif named_system_count == 1:
+        for named_system_name, named_system_id in named_systems.items():
+            if named_system_name.lower() == system_name.lower():
+                return s(named_system_id, body_id)
     prefix, _, suffix = system_name.rpartition(' ')
     if suffix == system_name or suffix[0].lower() not in 'abcdefgh':
         print('Malformed system name:', suffix)

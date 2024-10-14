@@ -10,6 +10,14 @@ Examples, looking up Sol by the SystemAddress from the player journal:
     ./edgalmap.py 10477373803
     Copied to clipboard: "Wregoe AC-D d12-0"
 
+Looking up Halley's Comet with Sol's custom name (NEW):
+
+    $ ./edgalmap.py Sol -b 21
+    Wregoe AC-D d12-0, Body 21
+    System Address: 10477373803
+    Body Address: 756604747875617131
+    Copied to clipboard: "Wregoe AC-D d12-22020096"
+
 Looking up address of the HyperbolicOrbiter of the Thargoid Anomaly at confirmed waypoint 1:
 
     ./edgalmap.py Oochorrs UF-J c11-0 --body-id 17
