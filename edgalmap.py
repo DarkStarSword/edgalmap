@@ -81,10 +81,15 @@ def s_by_name(system_name, body_id):
         # send it to the clipboard cryptically... show the readable ID as well
         print("%s, Body %i" % (system_name_a, body_id))
 
-    system_address = encode_system_address(prefix, cube_layer, int(boxel_remainder), system_id_masked)
-    (system_address, body_addr) = calc_body_addr(system_address, body_id)
-    print('System Address: %i' % system_address)
-    print('Body Address: %i' % body_addr)
+    try:
+        system_address = encode_system_address(prefix, cube_layer, int(boxel_remainder), system_id_masked)
+        (system_address, body_addr) = calc_body_addr(system_address, body_id)
+        print('System Address: %i' % system_address)
+        print('Body Address: %i' % body_addr)
+    except KeyError:
+        # Probably a sector defined by XYZ + radius (e.g. Col 89) rather than
+        # boxel that we can't look up in the PGSectorNames.json file
+        print('Unable to calculate system address')
 
     winclipboard.copy_text_simple(system_name.encode('ascii'))
     print('Copied to clipboard: "%s"' % system_name)
